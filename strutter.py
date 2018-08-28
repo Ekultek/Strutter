@@ -1,5 +1,6 @@
 import re
 import json
+import time
 import urllib
 import argparse
 
@@ -57,6 +58,7 @@ def get_page(url, payload, proxy=None, user_agent=None):
     payloaded_url = "{}{}".format(url, payload)
     try:
         req = session.get(payloaded_url, verify=False, timeout=5)
+        time.sleep(1.7)  # need to sleep to give execution time to run
         status = req.status_code
         if status == 302:
             return True
