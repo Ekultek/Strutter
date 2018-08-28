@@ -129,7 +129,7 @@ def check_opts(opts):
         print("[+] using provided query: '{}'".format(opts.searchQuery))
         retval["query"] = opts.searchQuery
     if opts.commandToExecute is None:
-        retval["command"] = "whoami"
+        retval["command"] = "calc"
     else:
         print("[+] configuring command: '{}'".format(opts.commandToExecute))
         retval["command"] = opts.commandToExecute
