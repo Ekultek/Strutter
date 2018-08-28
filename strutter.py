@@ -126,7 +126,7 @@ def check_opts(opts):
         print("[+] configuring proxy: {}".format(opts.proxyToUse))
         retval["proxy"] = opts.proxyToUse
     if opts.searchQuery is None:
-        retval["query"] = "8080"
+        retval["query"] = "struts"
     else:
         print("[+] using provided query: '{}'".format(opts.searchQuery))
         retval["query"] = opts.searchQuery
