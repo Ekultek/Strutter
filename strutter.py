@@ -1,5 +1,6 @@
 import re
-import os, sys
+import os
+import sys
 import json
 import time
 import urllib
